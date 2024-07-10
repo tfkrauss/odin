@@ -1,0 +1,28 @@
+h1 {
+    margin:0;
+    padding:0;
+}
+
+#game-container{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap:30px;
+}
+
+#game-header{
+    display:flex;
+    gap:10px;
+}
+
+#gameboard{
+    display:grid;
+    grid-template: repeat(3, 250px) / repeat(3, 250px);
+    
+}
+
+#gameboard > *{
+    border: solid 1px black;
+}
+
