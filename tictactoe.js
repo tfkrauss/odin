@@ -92,11 +92,20 @@ function createGameboard(){
 }
 
 
+
+
+
+
+
 /*
     gameController() tracks the game state (whose turn it is, win cons, etc.)
     -
     -
 */
+const SUCCESSFUL_ROUND = 0;
+const UNSUCCESSFUL_ROUND = -1;
+const GAME_WON = 1;
+const GAME_TIE = 2;
 
 function gameController(){
 
@@ -113,29 +122,32 @@ function gameController(){
     }
 
     //Function to play a single round. Called each time a tile is selected. 
-    //If the tile is already in use, returns false. 
+    //If the tile is already in use, returns -1. 
     //If tile is not in use, returns true and proceeds to next turn (updates currentPlayerTurn)
     const playRound = (row, col) => {
 
         //Place tile on gameboard. If placeTile returns false, return false.
         //If placeTile is successful (true), update currentPlayerTurn.
         if(!board.placeTile(row, col, currentPlayerTurn)){
-            return false;
+            return UNSUCCESSFUL_ROUND;
         };
 
         
-        checkWin(row,col);
-        checkTie();
+        if(checkWin(row,col)){
+            return GAME_WON;
+        }
+
+        if(checkTie()){
+            return GAME_TIE;
+        }
         
        
         //If currentPlayerTurn == 1, changes to 2. If currentPlayerTurn ==2, changes to 1
         currentPlayerTurn = (currentPlayerTurn % 2) + 1;   
 
         board.printBoard();
-        return true;
+        return SUCCESSFUL_ROUND;
     };
-
-
 
     //Function to check win conditions. Must be called each time a tile is placed successfully
     //Does not loop through the full array. Only checks the singular tile.
@@ -196,18 +208,21 @@ function gameController(){
         board.printBoard();
     }
 
+    const getActivePlayer = () => {
+        return currentPlayerTurn;
+    }
+
     return {
         resetGame,
         playRound,
         checkWin,
         checkTie,
         printBoard,
-        getBoard: board.getBoard
+        getBoard: board.getBoard,
+        getActivePlayer,
     };
 }
 
-
-game = gameController()
 
 
 
@@ -217,23 +232,80 @@ game = gameController()
     *Set up the gameboard html using javascript
     *Generate divs within the html grid.
 */
-
 function screenController(){
 
     const game = gameController();
-    
-}
-let htmlBoard = document.querySelector("#gameboard")
+    const board = game.getBoard();
 
-const board = game.getBoard();
 
-game.getBoard().forEach(row => {
+    let htmlBoard = document.querySelector("#gameboard");
+
+    //Function to set the screen display initially. Adds buttons with eventlisteners
+    const resetScreen = () =>{
+
+        //Create the buttons within the html grid
+        board.forEach((row, rowInd) => {
+            row.forEach((col, colInd)  => {
+                const tileButton = document.createElement("button");
+                tileButton.classList.add("tile")
+                tileButton.dataset.row = rowInd;
+                tileButton.dataset.col = colInd;
+                //Add event listener to tiles. When clicked, call playRound in the gameController.
+                //Must convert dataset attributes to int. They are defaultly set to strings in js
+                tileButton.addEventListener("click", () => {
+                    const row = parseInt(tileButton.dataset.row);
+                    const col = parseInt(tileButton.dataset.col);
+                    
+                    const roundResult = game.playRound(row,col);
+                    switch(roundResult) {
+                        case SUCCESSFUL_ROUND: 
+                            tileButton.textContent = game.getActivePlayer();
+                            switchRoundDisplay();
+                            break;
+                        case UNSUCCESSFUL_ROUND:
+                            break;
+                        case GAME_TIE:
+                            tileButton.textContent = game.getActivePlayer();
+                            displayTie();
+                            break;
+                        case GAME_WON:
+                            tileButton.textContent = game.getActivePlayer();
+                            displayWin();
+                            break;
+                    }
+                })
     
-})
-for(let i = 0; i < 3; i++){
-    for(let j = 0; j < 3; j++){
-        let tile = document.createElement("div");
-        htmlBoard.appendChild(tile);
+                htmlBoard.appendChild(tileButton);
+            })
+        })
     }
+
+    headerTile = document.querySelector("#player-tile");
+    headerPlayer = document.querySelector("#player-number")
+
+    //Function to switch the display to show whose turn it is
+    const switchRoundDisplay = () => {
+        if(game.getActivePlayer() === p1Val){
+            headerTile.textContent = "X"
+            headerPlayer.textContent = p1Val + "'s turn";
+        } else {
+            headerTile.textContent = "O"
+            headerPlayer.textContent = p2Val + "'s turn";
+        }
+    }
+
+    //Function to adjust the screen display in case of a tie game
+    const displayTie = () => {
+
+    }
+
+    //Function to adjust screen display in case of a won game
+    const displayWin = () => {
+
+    }
+
+    resetScreen();
     
 }
+
+screenController();
