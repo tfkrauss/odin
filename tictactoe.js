@@ -181,7 +181,7 @@ function gameController(){
                         //If there are three tiles in a row, return true
                         if (nextTilePos == origVal || nextTileNeg == origVal){
                             console.log("Game over! Player " + origVal + " has won!")
-                            resetGame();
+                            //resetGame();
                             return true;
                         }
                     }
@@ -200,7 +200,7 @@ function gameController(){
         }
 
         console.log("Game over! Game has ended in a tie.");
-        resetGame();
+        //resetGame();
         return true;
     }
 
@@ -237,11 +237,24 @@ function screenController(){
     const game = gameController();
     const board = game.getBoard();
 
+    let p1Tile = "X";
+    let p2Tile = "O";
+    let activeTile = p1Tile;
 
     let htmlBoard = document.querySelector("#gameboard");
 
     //Function to set the screen display initially. Adds buttons with eventlisteners
     const resetScreen = () =>{
+
+        //Clear the board
+        const tileButtons = document.querySelectorAll(".tile");
+        tileButtons.forEach(button => {
+            button.parentNode.removeChild(button);
+        })
+
+        
+        activeTile = p1Tile;
+        switchRoundDisplay();
 
         //Create the buttons within the html grid
         board.forEach((row, rowInd) => {
@@ -259,22 +272,21 @@ function screenController(){
                     const roundResult = game.playRound(row,col);
                     switch(roundResult) {
                         case SUCCESSFUL_ROUND: 
-                            tileButton.textContent = game.getActivePlayer();
+                            tileButton.textContent = activeTile;
                             switchRoundDisplay();
                             break;
                         case UNSUCCESSFUL_ROUND:
                             break;
                         case GAME_TIE:
-                            tileButton.textContent = game.getActivePlayer();
+                            tileButton.textContent = activeTile;
                             displayTie();
                             break;
                         case GAME_WON:
-                            tileButton.textContent = game.getActivePlayer();
+                            tileButton.textContent = activeTile;
                             displayWin();
                             break;
                     }
                 })
-    
                 htmlBoard.appendChild(tileButton);
             })
         })
@@ -286,26 +298,62 @@ function screenController(){
     //Function to switch the display to show whose turn it is
     const switchRoundDisplay = () => {
         if(game.getActivePlayer() === p1Val){
-            headerTile.textContent = "X"
-            headerPlayer.textContent = p1Val + "'s turn";
+            activeTile = p1Tile;
+            headerPlayer.textContent = "Player " + p1Val + "'s turn";
         } else {
-            headerTile.textContent = "O"
-            headerPlayer.textContent = p2Val + "'s turn";
+            activeTile = p2Tile;
+            headerPlayer.textContent = "Player " + p2Val + "'s turn";
         }
+        headerTile.textContent = activeTile;
+    }
+
+
+    //Add event handler to the reset button
+    const resetButton = document.querySelector("#reset-button");
+    resetButton.addEventListener("click", () => {
+        game.resetGame();
+        overlay.style.display = "none";
+        resetScreen();
+    })
+
+
+    const overlay = document.querySelector("#board-overlay");
+    const overlayText = document.querySelector("#overlay-text");
+    //Function to add an overlay effect onto the gameboard for end game screens
+    const addOverlay = () => {
+        overlay.style.display = "flex";
     }
 
     //Function to adjust the screen display in case of a tie game
     const displayTie = () => {
-
-    }
+        addOverlay();
+        overlayText.textContent = "Game over! Tie!"
+    };
 
     //Function to adjust screen display in case of a won game
     const displayWin = () => {
+        addOverlay();
+        overlayText.textContent = "Game over! Player " + game.getActivePlayer() + "wins!";
+    };
 
-    }
+
+    //Function to disable buttons after a game is over
+    //LEGACY:  NOT NEEDED SINCE THE OVERLAY DISABLES THE BUTTONS
+    const disableButtons = () => {
+        const tileButtons = document.querySelectorAll(".tile");
+        tileButtons.forEach(button => {
+            button.disabled = true;
+        })
+    };
+
+
+
+
 
     resetScreen();
-    
+    switchRoundDisplay();
+
+    return;
 }
 
 screenController();
